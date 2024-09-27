@@ -1,0 +1,19 @@
+[tool.poetry]
+name = "salmon-server"
+version = "0.1.0"
+description = ""
+authors = ["salmon113-ai <salmon113.ai@gmail.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.12"
+streamlit = "^1.38.0"
+langchain = "^0.3.1"
+langchain-openai = "^0.2.1"
+python-dotenv = "^1.0.1"
+openai = "^1.50.0"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
