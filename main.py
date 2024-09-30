@@ -1,11 +1,14 @@
 import streamlit as st
+import yaml
+from langchain_core.prompts import loading
 from langchain_core.messages.chat import ChatMessage
 from langchain_core.prompts import ChatPromptTemplate
+from langchain_core.prompts.base import BasePromptTemplate
 from langchain_core.output_parsers import StrOutputParser
 from langchain_openai import ChatOpenAI
 
 st.title("🐟Salmon Project #1")
-
+        
 if "messages" not in st.session_state:
     st.session_state["messages"] = []
 
@@ -17,6 +20,7 @@ def add_message(role, message):
     st.session_state["messages"].append(ChatMessage(role=role, content=message))
 
 def create_chain():
+    
     prompt = ChatPromptTemplate.from_messages([
         ("system", "당신은 친절한 AI 어시스턴트입니다. 질문에 짧게 답변하세요."),
         ("user", "#Question:\n{question}")
