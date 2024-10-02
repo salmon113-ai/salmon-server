@@ -7,24 +7,28 @@ from langchain_openai import ChatOpenAI
 from prompts.prompt_loader import load_prompt
 
 st.title("🐟Salmon Project #1")
-        
+
 if "messages" not in st.session_state:
     st.session_state["messages"] = []
+
 
 def print_message():
     for chat_message in st.session_state["messages"]:
         st.chat_message(chat_message.role).write(chat_message.content)
-        
+
+
 def add_message(role, message):
     st.session_state["messages"].append(ChatMessage(role=role, content=message))
+
 
 def create_chain(prompt):
     # LM studio에서 모델 선택 후 Local server 기동 필요
     llm = ChatOpenAI(base_url="http://localhost:1234/v1", api_key="lm-studio")
     output_parser = StrOutputParser()
-    
+
     return prompt | llm | output_parser
-    
+
+
 with st.sidebar:
     tab1, tab2 = st.tabs(["프롬프트", "프리셋"])
     prompt = """당신은 친절한 AI 어시스턴트 입니다. 사용자의 질문에 간결하게 답변해 주세요."""
