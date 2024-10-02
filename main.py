@@ -27,12 +27,12 @@ def create_chain(prompt):
     return prompt | llm | output_parser
     
 with st.sidebar:
-    tab1, tab2 = st.tabs(["프롬프트", "프리셋"])
+    tab1, tab2 = st.tabs(["prompt", "preset"])
     prompt = """당신은 친절한 AI 어시스턴트 입니다. 사용자의 질문에 간결하게 답변해 주세요."""
     user_text_prompt = tab1.text_area("프롬프트", value=prompt)
     user_text_apply_btn = tab1.button("프롬프트 적용", key="prompt_apply", use_container_width=True)
     if user_text_apply_btn:
-        tab1.markdown(f"✅ 작성한 프롬프트가 적용되었습니다")
+        st.warning('작성한 프롬프트가 적용되었습니다.', icon="👍")
         prompt_template = user_text_prompt + "\n\n#Question:\n{question}\n\n#Answer:"
         prompt = PromptTemplate.from_template(prompt_template)
         st.session_state["chain"] = create_chain(prompt)
@@ -40,7 +40,7 @@ with st.sidebar:
     user_selected_prompt = tab2.selectbox("프리셋 선택", ["summary", "emoji"])
     user_selected_apply_btn = tab2.button("프롬프트 적용", key="preset_prompt_apply", use_container_width=True)
     if user_selected_apply_btn:
-        tab2.markdown(f"✅ 프리셋 프롬프트가 적용되었습니다")
+        st.warning(f"{user_selected_prompt} 프롬프트가 적용되었습니다.", icon="👍")
         prompt = load_prompt(f"prompts/{user_selected_prompt}.yaml", encoding="utf8")
         st.session_state["chain"] = create_chain(prompt)
     # 파일 업로드
@@ -53,7 +53,6 @@ if clear_btn:
 user_input = st.chat_input("궁금한 내용을 물어보세요.")
 
 print_message()
-
 if "chain" not in st.session_state:
     prompt = load_prompt(f"prompts/general.yaml", encoding="utf8")
     st.session_state["chain"] = create_chain(prompt)
