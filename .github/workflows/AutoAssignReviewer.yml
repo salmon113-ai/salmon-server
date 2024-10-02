@@ -10,5 +10,6 @@ jobs:
     steps:
       - uses: hkusu/review-assign-action@v1
         with:
+          repo-token: '${{ secrets.GITHUB_TOKEN }}'
           assignees: ${{ github.actor }} # assign pull request author
           reviewers: hajubal, yulliyulli
