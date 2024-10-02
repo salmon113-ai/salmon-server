@@ -6,6 +6,7 @@ from langchain_openai import ChatOpenAI
 
 from prompts.prompt_loader import load_prompt
 
+st.set_page_config(page_title="Salmon Project #1", page_icon="🐟")
 st.title("🐟Salmon Project #1")
         
 if "messages" not in st.session_state:
@@ -29,7 +30,7 @@ with st.sidebar:
     tab1, tab2 = st.tabs(["프롬프트", "프리셋"])
     prompt = """당신은 친절한 AI 어시스턴트 입니다. 사용자의 질문에 간결하게 답변해 주세요."""
     user_text_prompt = tab1.text_area("프롬프트", value=prompt)
-    user_text_apply_btn = tab1.button("프롬프트 적용", key="prompt_apply")
+    user_text_apply_btn = tab1.button("프롬프트 적용", key="prompt_apply", use_container_width=True)
     if user_text_apply_btn:
         tab1.markdown(f"✅ 작성한 프롬프트가 적용되었습니다")
         prompt_template = user_text_prompt + "\n\n#Question:\n{question}\n\n#Answer:"
@@ -37,12 +38,13 @@ with st.sidebar:
         st.session_state["chain"] = create_chain(prompt)
 
     user_selected_prompt = tab2.selectbox("프리셋 선택", ["summary", "emoji"])
-    user_selected_apply_btn = tab2.button("프롬프트 적용", key="preset_prompt_apply")
+    user_selected_apply_btn = tab2.button("프롬프트 적용", key="preset_prompt_apply", use_container_width=True)
     if user_selected_apply_btn:
         tab2.markdown(f"✅ 프리셋 프롬프트가 적용되었습니다")
         prompt = load_prompt(f"prompts/{user_selected_prompt}.yaml", encoding="utf8")
         st.session_state["chain"] = create_chain(prompt)
-
+    # 파일 업로드
+    uploaded_file = st.file_uploader("파일 업로드", type=["pdf"])
     clear_btn = st.button("대화내용 초기화", type="primary", use_container_width=True)
 
 if clear_btn:
