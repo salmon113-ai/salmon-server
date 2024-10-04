@@ -16,6 +16,7 @@ load_dotenv()
 st.set_page_config(page_title="Salmon Project #1", page_icon="🐟")
 st.title("🐟Salmon Project #1")
 
+
 if not os.path.exists(".cache"):
     os.mkdir(".cache")
 
@@ -29,12 +30,15 @@ if not os.path.exists(".cache/embeddings"):
 if "messages" not in st.session_state:
     st.session_state["messages"] = []
 
+
 def print_message():
     for chat_message in st.session_state["messages"]:
         st.chat_message(chat_message.role).write(chat_message.content)
-        
+
+
 def add_message(role, message):
     st.session_state["messages"].append(ChatMessage(role=role, content=message))
+
 
 @st.cache_resource(show_spinner="업로드한 파일을 처리 중입니다...")
 def embed_file(file):
@@ -63,7 +67,8 @@ def create_chain(retriever, prompt):
     )
 
     return chain
-    
+
+
 with st.sidebar:
     tab1, tab2 = st.tabs(["prompt", "preset"])
     prompt = """당신은 친절한 AI 어시스턴트 입니다. 사용자의 질문에 간결하게 답변해 주세요."""
