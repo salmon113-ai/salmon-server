@@ -3,8 +3,11 @@ from langchain_core.messages.chat import ChatMessage
 from langchain_core.prompts import PromptTemplate
 from langchain_core.output_parsers import StrOutputParser
 from langchain_openai import ChatOpenAI
+from dotenv import load_dotenv
 
 from prompts.prompt_loader import load_prompt
+
+load_dotenv()
 
 st.set_page_config(page_title="Salmon Project #1", page_icon="🐟")
 st.title("🐟Salmon Project #1")
@@ -21,7 +24,8 @@ def add_message(role, message):
 
 def create_chain(prompt):
     # LM studio에서 모델 선택 후 Local server 기동 필요
-    llm = ChatOpenAI(base_url="http://localhost:1234/v1", api_key="lm-studio")
+    llm = ChatOpenAI(model_name="teddylee777/EEVE-Korean-Instruct-10.8B-v1.0-gguf/EEVE-Korean-Instruct-10.8B-v1.0-Q4_0.gguf",
+        base_url="http://localhost:1234/v1", api_key="lm-studio")
     output_parser = StrOutputParser()
     
     return prompt | llm | output_parser
