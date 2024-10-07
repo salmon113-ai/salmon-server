@@ -1,14 +1,13 @@
+import os
+
 import streamlit as st
+from dotenv import load_dotenv
 from langchain_core.messages.chat import ChatMessage
-from langchain_core.prompts import PromptTemplate
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.runnables import RunnablePassthrough
 from langchain_openai import ChatOpenAI
-from dotenv import load_dotenv
 
 from prompts.prompt_loader import load_prompt
-import os
-
 from retriver import create_retriever
 
 load_dotenv()
@@ -55,39 +54,39 @@ def create_chain(retriever, prompt):
     llm = ChatOpenAI(model_name="teddylee777/EEVE-Korean-Instruct-10.8B-v1.0-gguf/EEVE-Korean-Instruct-10.8B-v1.0-Q4_0.gguf",
         base_url="http://localhost:1234/v1", api_key="lm-studio")
 
-    chain = (
-            {"context": retriever | format_doc, "question": RunnablePassthrough()}
+    return (
+            {"context": retriever, "question": RunnablePassthrough()}
             | prompt
             | llm
             | StrOutputParser()
     )
 
-    return chain
-    
-with st.sidebar:
-    tab1, tab2 = st.tabs(["prompt", "preset"])
-    prompt = """당신은 친절한 AI 어시스턴트 입니다. 사용자의 질문에 간결하게 답변해 주세요."""
-    user_text_prompt = tab1.text_area("프롬프트", value=prompt)
-    user_text_apply_btn = tab1.button("프롬프트 적용", key="prompt_apply", use_container_width=True)
-    if user_text_apply_btn:
-        st.warning('작성한 프롬프트가 적용되었습니다.', icon="👍")
-        prompt_template = user_text_prompt + "\n\n#Question:\n{question}\n\n#Answer:"
-        prompt = PromptTemplate.from_template(prompt_template)
-        st.session_state["chain"] = create_chain(None, prompt)
 
-    user_selected_prompt = tab2.selectbox("프리셋 선택", ["summary", "emoji"])
-    user_selected_apply_btn = tab2.button("프롬프트 적용", key="preset_prompt_apply", use_container_width=True)
-    if user_selected_apply_btn:
-        st.warning(f"{user_selected_prompt} 프롬프트가 적용되었습니다.", icon="👍")
-        prompt = load_prompt(f"prompts/{user_selected_prompt}.yaml", encoding="utf8")
-        st.session_state["chain"] = create_chain(None, prompt)
+with st.sidebar:
     # 파일 업로드
     uploaded_file = st.file_uploader("파일 업로드", type=["pdf"])
     clear_btn = st.button("대화내용 초기화", type="primary", use_container_width=True)
+    # tab1, tab2 = st.tabs(["prompt", "preset"])
+    # prompt = """당신은 친절한 AI 어시스턴트 입니다. 사용자의 질문에 간결하게 답변해 주세요."""
+    # user_text_prompt = tab1.text_area("프롬프트", value=prompt)
+    # user_text_apply_btn = tab1.button("프롬프트 적용", key="prompt_apply", use_container_width=True)
+    # if user_text_apply_btn:
+    #     st.warning('작성한 프롬프트가 적용되었습니다.', icon="👍")
+    #     prompt_template = user_text_prompt + "\n\n#Question:\n{question}\n\n#Answer:"
+    #     prompt = PromptTemplate.from_template(prompt_template)
+    #     st.session_state["chain"] = create_chain(, prompt)
+    #
+    # user_selected_prompt = tab2.selectbox("프리셋 선택", ["summary", "emoji"])
+    # user_selected_apply_btn = tab2.button("프롬프트 적용", key="preset_prompt_apply", use_container_width=True)
+    # if user_selected_apply_btn:
+    #     st.warning(f"{user_selected_prompt} 프롬프트가 적용되었습니다.", icon="👍")
+    #     prompt = load_prompt(f"prompts/{user_selected_prompt}.yaml", encoding="utf8")
+    #     st.session_state["chain"] = create_chain(None, prompt)
 
 if uploaded_file:
     # 파일 업로드 후 retriever 생성 (작업시간이 오래 걸릴 예정...)
     retriever = embed_file(uploaded_file)
+    prompt = load_prompt(f"prompts/rag.yaml", encoding="utf8")
     chain = create_chain(retriever, prompt)
     st.session_state["chain"] = chain
 
@@ -102,18 +101,23 @@ print_message()
 if user_input:
     chain = st.session_state["chain"]
 
-    add_message("user", user_input)
-    st.chat_message("user").write(user_input)
+    if chain is not None:
+        add_message("user", user_input)
+        st.chat_message("user").write(user_input)
 
-    with st.chat_message("assistant"):
-        chat_container = st.empty()
+        with st.chat_message("assistant"):
+            chat_container = st.empty()
 
-        stream_response = st.session_state["chain"].stream(
-            {"question": user_input}
-        )
+            stream_response = st.session_state["chain"].stream(
+                user_input
+            )
 
-        ai_answer = ""
-        for chunk in stream_response:
-            ai_answer += chunk
-            chat_container.markdown(ai_answer)
-        add_message("assistant", ai_answer)
+            ai_answer = ""
+            for chunk in stream_response:
+                ai_answer += chunk
+                chat_container.markdown(ai_answer)
+            add_message("assistant", ai_answer)
+
+    else:
+        # 파일을 업로드 하라는 경고 메시지 출력
+        warning_msg.error("파일을 업로드 해주세요.")

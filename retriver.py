@@ -1,8 +1,8 @@
-from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_community.document_loaders import PDFPlumberLoader
 from langchain_community.vectorstores import FAISS
-from langchain_huggingface.embeddings import HuggingFaceEndpointEmbeddings
-import os
+from langchain_huggingface import HuggingFaceEmbeddings
+from langchain_text_splitters import RecursiveCharacterTextSplitter
+
 
 def create_retriever(file_path):
     # 단계 1: 문서 로드(Load Documents)
@@ -14,17 +14,15 @@ def create_retriever(file_path):
     split_documents = text_splitter.split_documents(docs)
 
     # 단계 3: 임베딩(Embedding) 생성
-    embeddings = HuggingFaceEndpointEmbeddings(
-        model="intfloat/multilingual-e5-large-instruct",
-        task="feature-extraction",
-        huggingfacehub_api_token=os.environ["HUGGINGFACEHUB_API_TOKEN"],
+    embeddings = HuggingFaceEmbeddings(
+        model_name="intfloat/multilingual-e5-large-instruct",
+        model_kwargs={"device": "cuda"},  # cuda, cpu
+        encode_kwargs={"normalize_embeddings": True},
     )
 
     # 단계 4: DB 생성(Create DB) 및 저장
-    # 벡터스토어를 생성합니다.
     vectorstore = FAISS.from_documents(documents=split_documents, embedding=embeddings)
 
     # 단계 5: 검색기(Retriever) 생성
-    # 문서에 포함되어 있는 정보를 검색하고 생성합니다.
     retriever = vectorstore.as_retriever()
     return retriever
