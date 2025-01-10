@@ -10,7 +10,7 @@ class OllamaClient:
             async with session.post(
                 f"{self.base_url}/api/generate",
                 json={
-                    "model": "llama2",
+                    "model": "llama3.1:latest",
                     "prompt": message,
                     "stream": True
                 }
