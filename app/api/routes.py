@@ -39,7 +39,7 @@ async def message_streamer(message: str):
     
     # Ollama로 메시지 전송 및 응답 스트리밍
     async for chunk in ollama_client.generate_stream(processed_message):
-        yield f"data: {chunk}\n\n"
+        yield f"{chunk}"
 
 @router.post("/stream/chat")
 async def chat_stream(request: dict):
