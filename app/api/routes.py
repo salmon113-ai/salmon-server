@@ -1,6 +1,7 @@
 from fastapi import APIRouter, WebSocket
 from fastapi.responses import StreamingResponse
 import json
+import asyncio
 from ..core.filters import (
     ProfanityFilter,
     PersonalInfoFilter,
@@ -28,22 +29,23 @@ def create_filter_chain() -> ProfanityFilter:
 
     return profanity
 
-async def message_streamer(message: str):
-    filter_chain = create_filter_chain()
-    ollama_client = OllamaClient()
-    
-    # 필터 체인을 통한 메시지 처리
-    processed_message = await filter_chain.process(message)
-
-    print(processed_message)
-    
-    # Ollama로 메시지 전송 및 응답 스트리밍
-    async for chunk in ollama_client.generate_stream(processed_message):
-        yield f"{chunk}"
+async def message_generator(client: OllamaClient, message: str):
+    async for response in client.generate_stream(message):
+        # Server-Sent Events 형식으로 데이터 전송
+        yield f"data: {response}\n\n"
+        # 클라이언트에게 즉시 전송되도록 작은 지연 추가
+        await asyncio.sleep(0.01)
 
 @router.post("/stream/chat")
 async def chat_stream(request: dict):
+    client = OllamaClient()
+    
     return StreamingResponse(
-        message_streamer(request.get("message", "")),
-        media_type="text/event-stream"
+        message_generator(client, request.get("message", "")),
+        media_type="text/event-stream",
+        headers={
+            'Cache-Control': 'no-cache',
+            'Connection': 'keep-alive',
+            'Access-Control-Allow-Origin': '*',
+        }
     )
