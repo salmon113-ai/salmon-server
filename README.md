@@ -19,7 +19,7 @@ flake8: 코드 린터
 
 ## 실행:
 ``` shell
-poetry run uvicorn app.main:app --reload
+poetry run uvicorn app.main:app --port 8080 --reload
 ```
 
 # copyright...
