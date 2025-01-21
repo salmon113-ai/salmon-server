@@ -29,20 +29,21 @@ def create_filter_chain() -> ProfanityFilter:
 
     return profanity
 
-async def message_generator(client: OllamaClient, message: str):
-    async for response in client.generate_stream(message):
+def message_generator(client: OllamaClient, message: str):
+    # for response in client.generate_stream(message):
+    for response in client.completion_stream(message):
         # Server-Sent Events 형식으로 데이터 전송
-        yield f"data: {response}\n\n"
+        yield f"{response}\n"
         # 클라이언트에게 즉시 전송되도록 작은 지연 추가
-        await asyncio.sleep(0.01)
 
-@router.post("/stream/chat")
-async def chat_stream(request: dict):
+
+@router.post("/stream/chat", response_class=StreamingResponse)
+def chat_stream(request: dict):
     client = OllamaClient()
     
     return StreamingResponse(
         message_generator(client, request.get("message", "")),
-        media_type="text/event-stream",
+        media_type="application/x-ndjson",
         headers={
             'Cache-Control': 'no-cache',
             'Connection': 'keep-alive',
