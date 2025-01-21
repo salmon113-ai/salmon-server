@@ -2,6 +2,7 @@ import aiohttp
 import json
 from typing import AsyncGenerator
 import logging
+import requests
 
 # 로거 설정 TODO:: 로그가 콘솔에 남지 않는 증상 확인
 logger = logging.getLogger('ollama_client')
@@ -11,38 +12,112 @@ class OllamaClient:
     def __init__(self, base_url: str = "http://localhost:11434"):
         self.base_url = base_url
 
-    async def generate_stream(self, message: str) -> AsyncGenerator[str, None]:
-        async with aiohttp.ClientSession() as session:
-            try:
-                async with session.post(
-                    f"{self.base_url}/api/generate",
-                    json={
-                        "model": "llama3.1:latest",
-                        "prompt": message,
-                        "stream": True
-                    }
-                ) as response:
-                    if response.status != 200:
-                        error_text = await response.text()
-                        raise Exception(f"API 호출 실패: {response.status} - {error_text}")
-                    
-                    async for line in response.content:
-                        if line:
-                            try:
-                                json_response = json.loads(line)
-
-                                # logger.log(logging.INFO, f"JSON 응답: {json_response}")
-
-                                # print(f"JSON 응답: {json_response}")
-
-                                if 'response' in json_response:
-                                    yield json_response['response']
-                                if json_response.get('done', False):
-                                    break
-                            except json.JSONDecodeError as e:
-                                print(f"JSON 파싱 에러: {e}")
-                                continue
+    def generate_stream(self, prompt, model="llama3.1:latest"):
+        """
+        Send a streaming request to Ollama API and yield responses
+        
+        Args:
+            prompt (str): The prompt to send to the model
+            model (str): The model to use (default: llama3.1:latest)
+            api_url (str): The Ollama API endpoint URL
             
-            except aiohttp.ClientError as e:
-                raise Exception(f"네트워크 오류: {str(e)}")
+        Yields:
+            dict: Parsed JSON response from the API
+        """
+        
+        # Prepare the request payload
+        payload = {
+            "model": model,
+            "prompt": prompt,
+            "stream": True
+        }
+        
+        headers = {
+            "Content-Type": "application/json"
+        }
+        
+        try:
+            # Send POST request with streaming enabled
+            with requests.post(self.base_url + "/api/generate", json=payload, headers=headers, stream=True) as response:
+                response.raise_for_status()  # Raise exception for bad status codes
+                
+                # Process the streaming response
+                for line in response.iter_lines():
+                    if line:
+                        # Parse JSON response
+                        print(line)
+                        json_response = json.loads(line)
+                        yield json_response
+                        
+                        # Check if response is done
+                        if json_response.get("done", False):
+                            break
+                            
+        except requests.exceptions.RequestException as e:
+            print(f"Error making request: {e}")
+            raise
+        except json.JSONDecodeError as e:
+            print(f"Error decoding JSON response: {e}")
+            raise
+
+    def completion_stream(self, prompt, model="llama3.1:latest"):
+        """
+        Send a streaming request to Ollama API and yield responses
+        
+        Args:
+            prompt (str): The prompt to send to the model
+            model (str): The model to use (default: llama3.1:latest)
+            api_url (str): The Ollama API endpoint URL
+            
+        Yields:
+            dict: Parsed JSON response from the API
+        """
+        
+        # Prepare the request payload
+        # payload = {
+        #     "model": model,
+        #     "prompt": prompt,
+        #     "stream": True
+        # }
+        payload = {
+                "model": model,
+                "messages": [
+                    {
+                        "role": "system",
+                        "content": f"You are an agent of the AppleScript Pipeline. You have the power to control the volume of the system.",
+                    },
+                    {"role": "user", "content": prompt},
+                ],
+                "stream": True,
+            }
+        
+        headers = {
+            "Content-Type": "application/json"
+        }
+        
+        try:
+            # Send POST request with streaming enabled
+            # with requests.post(self.base_url + "/api/generate", json=payload, headers=headers, stream=True) as response:
+            with requests.post(self.base_url + "/v1/chat/completions", json=payload, headers=headers, stream=True) as response:
+                response.raise_for_status()  # Raise exception for bad status codes
+                
+                # Process the streaming response
+                for line in response.iter_lines():
+                    if line:
+                        # Parse JSON response
+                        print(line)
+                        yield line
+                        # json_response = json.loads(line)
+                        # yield json_response
+                        
+                        # # Check if response is done
+                        # if json_response.get("done", False):
+                        #     break
+                            
+        except requests.exceptions.RequestException as e:
+            print(f"Error making request: {e}")
+            raise
+        except json.JSONDecodeError as e:
+            print(f"Error decoding JSON response: {e}")
+            raise
             

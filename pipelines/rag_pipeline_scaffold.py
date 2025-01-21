@@ -1,7 +1,9 @@
 from typing import List, Union, Generator, Iterator
 from pydantic import BaseModel
 import aiohttp
+import json
 from typing import AsyncGenerator
+import requests
 # import logging
 # from sys import stdout
 
@@ -12,30 +14,60 @@ class RagClient:
     def __init__(self, base_url: str = "http://host.docker.internal:8080"):
         self.base_url = base_url
 
-    async def generate_stream(self, message: str) -> AsyncGenerator[str, None]:
-        async with aiohttp.ClientSession() as session:
-            async with session.post(
-                f"{self.base_url}/stream/chat",
-                json={
-                    "message": message
-                }
-            ) as response:
-                async for line in response.content:
-                    if line:
-                        yield line.decode().strip()
+    # async def generate_stream(self, message: str) -> AsyncGenerator[str, None]:
+    #     async with aiohttp.ClientSession() as session:
+    #         async with session.post(
+    #             f"{self.base_url}/stream/chat",
+    #             json={
+    #                 "message": message
+    #             }
+    #         ) as response:
+    #             async for line in response.content:
+    #                 if line:
+    #                     yield line.decode().strip()
+    
+    def generate_stream(self, message: str):
+        
+        # Prepare the request payload
+        payload = {
+            "message": message
+        }
+        
+        headers = {
+            "Content-Type": "application/json"
+        }
+        
+        try:
+            # Send POST request with streaming enabled
+            with requests.post(self.base_url + "/stream/chat", json=payload, headers=headers, stream=True) as response:
+                response.raise_for_status()  # Raise exception for bad status codes
+                
+                # Process the streaming response
+                # for line in response.iter_lines():
+                #     if line:
+                #         # Parse JSON response
+                #         json_response = json.loads(line)
+                #         yield json_response.get("response", "")
+                        
+                #         # Check if response is done
+                #         if json_response.get("done", False):
+                #             break
 
+                return response.iter_lines()
+                            
+        except requests.exceptions.RequestException as e:
+            print(f"Error making request: {e}")
+            raise
+        except json.JSONDecodeError as e:
+            print(f"Error decoding JSON response: {e}")
+            raise
+            
 
 class Pipeline:
     class Valves(BaseModel):
         pass
 
     def __init__(self):
-        # Optionally, you can set the id and name of the pipeline.
-        # Best practice is to not specify the id so that it can be automatically inferred from the filename, so that users can install multiple versions of the same pipeline.
-        # The identifier must be unique across all pipelines.
-        # The identifier must be an alphanumeric string that can include underscores or hyphens. It cannot contain spaces, special characters, slashes, or backslashes.
-        # self.id = "pipeline_example"
-
         # The name of the pipeline.
         self.name = "Pipeline Rag"
         pass
@@ -56,46 +88,58 @@ class Pipeline:
 
     async def inlet(self, body: dict, user: dict) -> dict:
         # This function is called before the OpenAI API request is made. You can modify the form data before it is sent to the OpenAI API.
-
-        print(f"{__name__} inlet body: {body}")
-        print(f"{__name__} inlet user: {user}")
-
         return body
 
     async def outlet(self, body: dict, user: dict) -> dict:
         # This function is called after the OpenAI API response is completed. You can modify the messages after they are received from the OpenAI API.
-
-        print(f"{__name__} outlet body: {body}")
-        print(f"{__name__} outlet user: {user}")
-
         return body
 
-    # def pipe(
-    #     self, user_message: str, model_id: str, messages: List[dict], body: dict
-    # ) -> Union[str, Generator, Iterator]:
-    #     # This is where you can add your custom pipelines like RAG.
-    #     print(f"pipe:{__name__}")
+    # 샘플 데이터
+    users = [
+        {"id": 1, "name": "Alice", "age": 30, "city": "New York"},
+        {"id": 2, "name": "Bob", "age": 25, "city": "San Francisco"},
+        {"id": 3, "name": "Charlie", "age": 35, "city": "Chicago"}
+    ]
 
-    #     # If you'd like to check for title generation, you can add the following check
-    #     if body.get("title", False):
-    #         print("Title Generation Request")
-
-    #     print(f"pipe:{__name__} model_id: {model_id}")
-    #     print(f"pipe:{__name__} message: {messages}")
-    #     print(f"pipe:{__name__} user_message: {user_message}")
-    #     print(f"pipe:{__name__} body: {body}")
-
-    #     # send to rag application server
-    #     ragClient = RagClient()
-
-    #     print(ragClient.base_url)
-
-    #     ragClient.generate_stream(user_message)
-
-    #     return "Hello, World!"   
+    # NDJSON 데이터 생성기
+    def generate_ndjson(self) -> Generator[str, None, None]:
+        for user in self.users:
+            yield json.dumps(user) + "\n"  # JSON 문자열로 변환 후 줄바꿈 추가
 
     def pipe(
         self, user_message: str, model_id: str, messages: List[dict], body: dict
-    ) -> AsyncGenerator[str, None]:
-        async for chunk in self.rag_client.generate_stream(user_message):
-            yield chunk 
+    ) -> Union[str, Generator, Iterator]:
+        
+        payload = {
+            "message": user_message
+        }
+        
+        headers = {
+            "Content-Type": "application/json"
+        }
+        
+        try:
+            # Send POST request with streaming enabled
+            with requests.post("http://host.docker.internal:8080" + "/stream/chat", json=payload, headers=headers, stream=True) as response:
+                response.raise_for_status()  # Raise exception for bad status codes
+                
+                # Process the streaming response
+                # for line in response.iter_lines():
+                #     if line:
+                #         # Parse JSON response
+                #         json_response = json.loads(line)
+                #         yield json_response.get("response", "")
+                        
+                #         # Check if response is done
+                #         if json_response.get("done", False):
+                #             break
+
+                return response.iter_lines()
+                            
+        except requests.exceptions.RequestException as e:
+            print(f"Error making request: {e}")
+            raise
+        except json.JSONDecodeError as e:
+            print(f"Error decoding JSON response: {e}")
+            raise
+    
