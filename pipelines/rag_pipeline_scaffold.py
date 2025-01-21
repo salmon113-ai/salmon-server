@@ -143,3 +143,63 @@ class Pipeline:
             print(f"Error decoding JSON response: {e}")
             raise
     
+    def pipe_ollama(
+        self, user_message: str, model_id: str, messages: List[dict], body: dict
+    ) -> Union[str, Generator, Iterator]:
+        
+        print(f"pipe:{__name__}")
+
+        OLLAMA_BASE_URL = "http://host.docker.internal:11434"
+        MODEL = "llama3.1:latest"
+
+        if body.get("title", False):
+            print("Title Generation")
+            return "AppleScript Pipeline"
+        else:
+            if "user" in body:
+                print("######################################")
+                print(f'# User: {body["user"]["name"]} ({body["user"]["id"]})')
+                print(f"# Message: {user_message}")
+                print("######################################")
+
+            commands = user_message.split(" ")
+
+            if commands[0] == "volume":
+
+                try:
+                    commands[1] = int(commands[1])
+                    if 0 <= commands[1] <= 100:
+                        call(
+                            [f"osascript -e 'set volume output volume {commands[1]}'"],
+                            shell=True,
+                        )
+                except:
+                    pass
+
+            payload = {
+                "model": MODEL,
+                "messages": [
+                    {
+                        "role": "system",
+                        "content": f"You are an agent of the AppleScript Pipeline. You have the power to control the volume of the system.",
+                    },
+                    {"role": "user", "content": user_message},
+                ],
+                "stream": body["stream"],
+            }
+
+            try:
+                r = requests.post(
+                    url=f"{OLLAMA_BASE_URL}/v1/chat/completions",
+                    json=payload,
+                    stream=True,
+                )
+
+                r.raise_for_status()
+
+                if body["stream"]:
+                    return r.iter_lines()
+                else:
+                    return r.json()
+            except Exception as e:
+                return f"Error: {e}"
