@@ -10,9 +10,10 @@ from ..core.filters import (
 )
 from ..core.ollama_client import OllamaClient
 from langfuse.client import Langfuse
+from ..utils.logger import get_logger, log_function_call
 
+logger = get_logger(__name__)
 router = APIRouter()
-
 
 # 필터 체인 초기화
 def create_filter_chain() -> ProfanityFilter:
@@ -40,6 +41,7 @@ def chat_stream(request: dict):
     request_message = request.get("message", "")
 
     print(f"Request message: {request_message}")
+    logger.info(f"Request message: {request_message}")
     
     return StreamingResponse(
         message_generator(client, request_message),

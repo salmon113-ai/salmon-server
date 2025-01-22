@@ -2,6 +2,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from .api.routes import router
+from .config.logging_config import setup_logging
 
 app = FastAPI(
     title="REST API Project",
@@ -18,5 +19,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# 로깅 설정 초기화
+setup_logging()
 app = FastAPI()
 app.include_router(router)

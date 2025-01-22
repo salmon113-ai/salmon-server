@@ -2,13 +2,17 @@ import aiohttp
 import json
 from typing import AsyncGenerator
 import requests
+from ..utils.logger import get_logger, log_function_call
 
+logger = get_logger(__name__)
 
 
 class OllamaClient:
     def __init__(self, base_url: str = "http://localhost:11434"):
         self.base_url = base_url
+        self.logger = logger
 
+    @log_function_call(logger)
     def generate_stream(self, prompt, model="llama3.1:latest"):
         """
         Send a streaming request to Ollama API and yield responses
@@ -44,7 +48,7 @@ class OllamaClient:
                         # Parse JSON response
                         response_data = line.decode("utf-8")
 
-                        print(f"Response: {response_data}")
+                        self.logger.info(f"Response: {response_data}")
 
                         json_response = json.loads(response_data)
                                                 
@@ -55,10 +59,10 @@ class OllamaClient:
                         yield json_response.get("response", "")
                             
         except requests.exceptions.RequestException as e:
-            print(f"Error making request: {e}")
+            self.logger.error(f"Error making request: {e}")
             raise
         except json.JSONDecodeError as e:
-            print(f"Error decoding JSON response: {e}")
+            self.logger.error(f"Error decoding JSON response: {e}")
             raise
 
     def completion_stream(self, prompt, model="llama3.1:latest"):

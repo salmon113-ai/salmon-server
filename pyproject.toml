@@ -38,6 +38,7 @@ torch = [
     { markers = "sys_platform == 'linux'", url = "https://download.pytorch.org/whl/cpu/torch-1.13.1%2Bcpu-cp39-cp39-linux_x86_64.whl" },
     { markers = "sys_platform == 'win32'", url = "https://download.pytorch.org/whl/cpu/torch-2.5.1%2Bcpu-cp312-cp312-win_amd64.whl" }
 ]
+python-json-logger = "^3.2.1"
 
 [build-system]
 requires = ["poetry-core"]
