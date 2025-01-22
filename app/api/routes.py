@@ -31,8 +31,8 @@ def create_filter_chain() -> ProfanityFilter:
     return profanity
 
 def message_generator(client: OllamaClient, message: str):
-    for response in client.generate_stream(message):
-        yield f"{response}\n"
+    for response in client.completion_stream(message):
+        yield response + b'\n'
 
 @router.post("/stream/chat", response_class=StreamingResponse)
 def chat_stream(request: dict):
@@ -40,7 +40,6 @@ def chat_stream(request: dict):
 
     request_message = request.get("message", "")
 
-    print(f"Request message: {request_message}")
     logger.info(f"Request message: {request_message}")
     
     return StreamingResponse(

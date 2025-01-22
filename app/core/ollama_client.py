@@ -46,17 +46,8 @@ class OllamaClient:
                 for line in response.iter_lines():
                     if line:
                         # Parse JSON response
-                        response_data = line.decode("utf-8")
-
-                        self.logger.info(f"Response: {response_data}")
-
-                        json_response = json.loads(response_data)
-                                                
-                        # Check if response is done
-                        if json_response.get("done", False):
-                            break
-
-                        yield json_response.get("response", "")
+                        self.logger.info(f"Response: {line}")
+                        yield line
                             
         except requests.exceptions.RequestException as e:
             self.logger.error(f"Error making request: {e}")
@@ -77,13 +68,7 @@ class OllamaClient:
         Yields:
             dict: Parsed JSON response from the API
         """
-        
-        # Prepare the request payload
-        # payload = {
-        #     "model": model,
-        #     "prompt": prompt,
-        #     "stream": True
-        # }
+ 
         payload = {
                 "model": model,
                 "messages": [
@@ -102,25 +87,15 @@ class OllamaClient:
         
         try:
             # Send POST request with streaming enabled
-            with requests.post(self.base_url + "/api/generate", json=payload, headers=headers, stream=True) as response:
-            # with requests.post(self.base_url + "/v1/chat/completions", json=payload, headers=headers, stream=True) as response:
+            with requests.post(self.base_url + "/v1/chat/completions", json=payload, headers=headers, stream=True) as response:
                 response.raise_for_status()  # Raise exception for bad status codes
                 
                 # Process the streaming response
                 for line in response.iter_lines():
                     if line:
-                        # Parse JSON response
-                        response_data = line.decode("utf-8")
-
-                        print(f"Response: {response_data}")
-
-                        json_response = json.loads(response_data)
+                        self.logger.info(f"Response: {line}")
                         
-                        # Check if response is done
-                        if json_response.get("done", False):
-                            break
-
-                        yield json_response.get("content", "")
+                        yield line
 
         except requests.exceptions.RequestException as e:
             print(f"Error making request: {e}")
