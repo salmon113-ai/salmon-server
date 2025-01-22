@@ -43,12 +43,16 @@ class Pipeline:
             return "Pipeline Rag"
         
         payload = {
-            "message": user_message
+            "message": user_message,
+            "stream": body.get("stream", False)
         }
         
         headers = {
             "Content-Type": "application/json"
         }
+
+        print(f"message: {messages}")
+        print(f"body: {body}")
         
         # with 절을 사용하면 openwebui에서 정상적으로 메시지를 못가져감. 메시지 몇개 가져가고 통신이 끊김
         try:

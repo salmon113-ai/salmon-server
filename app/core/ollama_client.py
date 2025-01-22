@@ -8,8 +8,9 @@ logger = get_logger(__name__)
 
 
 class OllamaClient:
-    def __init__(self, base_url: str = "http://localhost:11434"):
+    def __init__(self, base_url: str = "http://localhost:11434", stream: bool = False):
         self.base_url = base_url
+        self.stream = stream
         self.logger = logger
 
     @log_function_call(logger)
@@ -30,7 +31,7 @@ class OllamaClient:
         payload = {
             "model": model,
             "prompt": prompt,
-            "stream": True
+            "stream": self.stream
         }
         
         headers = {

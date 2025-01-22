@@ -36,11 +36,11 @@ def message_generator(client: OllamaClient, message: str):
 
 @router.post("/stream/chat", response_class=StreamingResponse)
 def chat_stream(request: dict):
-    client = OllamaClient()
+    client = OllamaClient(stream=request.get("stream", "False"))
 
     request_message = request.get("message", "")
 
-    logger.info(f"Request message: {request_message}")
+    logger.info(f"Request message: {request}")
     
     return StreamingResponse(
         message_generator(client, request_message),
