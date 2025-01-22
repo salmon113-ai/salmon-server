@@ -110,6 +110,10 @@ class Pipeline:
         self, user_message: str, model_id: str, messages: List[dict], body: dict
     ) -> Union[str, Generator, Iterator]:
         
+        if body.get("title", False):
+            print("Title Generation")
+            return "Pipeline Rag"
+        
         payload = {
             "message": user_message
         }
@@ -120,21 +124,10 @@ class Pipeline:
         
         try:
             # Send POST request with streaming enabled
-            with requests.post("http://host.docker.internal:8080" + "/stream/chat", json=payload, headers=headers, stream=True) as response:
-                response.raise_for_status()  # Raise exception for bad status codes
-                
-                # Process the streaming response
-                # for line in response.iter_lines():
-                #     if line:
-                #         # Parse JSON response
-                #         json_response = json.loads(line)
-                #         yield json_response.get("response", "")
-                        
-                #         # Check if response is done
-                #         if json_response.get("done", False):
-                #             break
+            r = requests.post("http://host.docker.internal:8080" + "/stream/chat", json=payload, headers=headers, stream=True)
+            r.raise_for_status()  # Raise exception for bad status codes
 
-                return response.iter_lines()
+            return r.iter_lines()
                             
         except requests.exceptions.RequestException as e:
             print(f"Error making request: {e}")
@@ -161,20 +154,6 @@ class Pipeline:
                 print(f'# User: {body["user"]["name"]} ({body["user"]["id"]})')
                 print(f"# Message: {user_message}")
                 print("######################################")
-
-            commands = user_message.split(" ")
-
-            if commands[0] == "volume":
-
-                try:
-                    commands[1] = int(commands[1])
-                    if 0 <= commands[1] <= 100:
-                        call(
-                            [f"osascript -e 'set volume output volume {commands[1]}'"],
-                            shell=True,
-                        )
-                except:
-                    pass
 
             payload = {
                 "model": MODEL,

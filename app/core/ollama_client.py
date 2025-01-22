@@ -74,22 +74,11 @@ class OllamaClient:
         """
         
         # Prepare the request payload
-        # payload = {
-        #     "model": model,
-        #     "prompt": prompt,
-        #     "stream": True
-        # }
         payload = {
-                "model": model,
-                "messages": [
-                    {
-                        "role": "system",
-                        "content": f"You are an agent of the AppleScript Pipeline. You have the power to control the volume of the system.",
-                    },
-                    {"role": "user", "content": prompt},
-                ],
-                "stream": True,
-            }
+            "model": model,
+            "prompt": prompt,
+            "stream": True
+        }
         
         headers = {
             "Content-Type": "application/json"
@@ -97,23 +86,22 @@ class OllamaClient:
         
         try:
             # Send POST request with streaming enabled
-            # with requests.post(self.base_url + "/api/generate", json=payload, headers=headers, stream=True) as response:
-            with requests.post(self.base_url + "/v1/chat/completions", json=payload, headers=headers, stream=True) as response:
+            with requests.post(self.base_url + "/api/generate", json=payload, headers=headers, stream=True) as response:
                 response.raise_for_status()  # Raise exception for bad status codes
                 
                 # Process the streaming response
                 for line in response.iter_lines():
                     if line:
-                        # Parse JSON response
                         print(line)
-                        yield line
-                        # json_response = json.loads(line)
-                        # yield json_response
+                        # Parse JSON response
+                        json_response = json.loads(line)
                         
-                        # # Check if response is done
-                        # if json_response.get("done", False):
-                        #     break
-                            
+                        # Check if response is done
+                        if json_response.get("done", False):    
+                            break
+
+                        yield json_response.get("response", "")
+
         except requests.exceptions.RequestException as e:
             print(f"Error making request: {e}")
             raise
