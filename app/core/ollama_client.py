@@ -1,12 +1,9 @@
 import aiohttp
 import json
 from typing import AsyncGenerator
-import logging
 import requests
 
-# 로거 설정 TODO:: 로그가 콘솔에 남지 않는 증상 확인
-logger = logging.getLogger('ollama_client')
-logger.setLevel(logging.DEBUG)
+
 
 class OllamaClient:
     def __init__(self, base_url: str = "http://localhost:11434"):
@@ -45,13 +42,17 @@ class OllamaClient:
                 for line in response.iter_lines():
                     if line:
                         # Parse JSON response
-                        print(line)
-                        json_response = json.loads(line)
-                        yield json_response
-                        
+                        response_data = line.decode("utf-8")
+
+                        print(f"Response: {response_data}")
+
+                        json_response = json.loads(response_data)
+                                                
                         # Check if response is done
                         if json_response.get("done", False):
                             break
+
+                        yield json_response.get("response", "")
                             
         except requests.exceptions.RequestException as e:
             print(f"Error making request: {e}")
@@ -74,11 +75,22 @@ class OllamaClient:
         """
         
         # Prepare the request payload
+        # payload = {
+        #     "model": model,
+        #     "prompt": prompt,
+        #     "stream": True
+        # }
         payload = {
-            "model": model,
-            "prompt": prompt,
-            "stream": True
-        }
+                "model": model,
+                "messages": [
+                    {
+                        "role": "system",
+                        "content": f"You are an agent of the AppleScript Pipeline. You have the power to control the volume of the system.",
+                    },
+                    {"role": "user", "content": prompt},
+                ],
+                "stream": True,
+            }
         
         headers = {
             "Content-Type": "application/json"
@@ -87,20 +99,24 @@ class OllamaClient:
         try:
             # Send POST request with streaming enabled
             with requests.post(self.base_url + "/api/generate", json=payload, headers=headers, stream=True) as response:
+            # with requests.post(self.base_url + "/v1/chat/completions", json=payload, headers=headers, stream=True) as response:
                 response.raise_for_status()  # Raise exception for bad status codes
                 
                 # Process the streaming response
                 for line in response.iter_lines():
                     if line:
-                        print(line)
                         # Parse JSON response
-                        json_response = json.loads(line)
+                        response_data = line.decode("utf-8")
+
+                        print(f"Response: {response_data}")
+
+                        json_response = json.loads(response_data)
                         
                         # Check if response is done
-                        if json_response.get("done", False):    
+                        if json_response.get("done", False):
                             break
 
-                        yield json_response.get("response", "")
+                        yield json_response.get("content", "")
 
         except requests.exceptions.RequestException as e:
             print(f"Error making request: {e}")

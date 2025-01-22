@@ -30,19 +30,19 @@ def create_filter_chain() -> ProfanityFilter:
     return profanity
 
 def message_generator(client: OllamaClient, message: str):
-    # for response in client.generate_stream(message):
-    for response in client.completion_stream(message):
-        # Server-Sent Events 형식으로 데이터 전송
+    for response in client.generate_stream(message):
         yield f"{response}\n"
-        # 클라이언트에게 즉시 전송되도록 작은 지연 추가
-
 
 @router.post("/stream/chat", response_class=StreamingResponse)
 def chat_stream(request: dict):
     client = OllamaClient()
+
+    request_message = request.get("message", "")
+
+    print(f"Request message: {request_message}")
     
     return StreamingResponse(
-        message_generator(client, request.get("message", "")),
+        message_generator(client, request_message),
         media_type="application/x-ndjson",
         headers={
             'Cache-Control': 'no-cache',
