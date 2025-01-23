@@ -53,7 +53,13 @@ class Pipeline:
         try:
             r = requests.post("http://host.docker.internal:8080" + "/stream/chat", json=body, headers=headers, stream=True)
             r.raise_for_status()
-            return r.iter_lines()
+
+            if body.get("stream", True):
+                return r.iter_lines()                
+            else:
+                # stream 이 아닌 경우 본문을 반환해야 요약이 제대로 표시됨
+                return r.content
+            
         except requests.exceptions.RequestException as e:
             print(f"Error making request: {e}")
             raise
