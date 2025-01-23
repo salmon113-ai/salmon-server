@@ -42,11 +42,6 @@ class Pipeline:
             print("Title Generation")
             return "Pipeline Rag"
         
-        payload = {
-            "message": user_message,
-            "stream": body.get("stream", False)
-        }
-        
         headers = {
             "Content-Type": "application/json"
         }
@@ -56,7 +51,7 @@ class Pipeline:
         
         # with 절을 사용하면 openwebui에서 정상적으로 메시지를 못가져감. 메시지 몇개 가져가고 통신이 끊김
         try:
-            r = requests.post("http://host.docker.internal:8080" + "/stream/chat", json=payload, headers=headers, stream=True)
+            r = requests.post("http://host.docker.internal:8080" + "/stream/chat", json=body, headers=headers, stream=True)
             r.raise_for_status()
             return r.iter_lines()
         except requests.exceptions.RequestException as e:

@@ -1,6 +1,4 @@
-import aiohttp
 import json
-from typing import AsyncGenerator
 import requests
 from ..utils.logger import get_logger, log_function_call
 
@@ -46,7 +44,6 @@ class OllamaClient:
                 # Process the streaming response
                 for line in response.iter_lines():
                     if line:
-                        # Parse JSON response
                         self.logger.info(f"Response: {line}")
                         yield line
                             
@@ -57,6 +54,7 @@ class OllamaClient:
             self.logger.error(f"Error decoding JSON response: {e}")
             raise
 
+    @log_function_call(logger)
     def completion_stream(self, prompt, model="llama3.1:latest"):
         """
         Send a streaming request to Ollama API and yield responses
@@ -69,17 +67,13 @@ class OllamaClient:
         Yields:
             dict: Parsed JSON response from the API
         """
- 
+
+        request_data = prompt
+
         payload = {
                 "model": model,
-                "messages": [
-                    {
-                        "role": "system",
-                        "content": f"You are an agent of the AppleScript Pipeline. You have the power to control the volume of the system.",
-                    },
-                    {"role": "user", "content": prompt},
-                ],
-                "stream": True,
+                "messages": request_data.get("messages", []),
+                "stream": request_data.get("stream", True),
             }
         
         headers = {
@@ -104,4 +98,5 @@ class OllamaClient:
         except json.JSONDecodeError as e:
             print(f"Error decoding JSON response: {e}")
             raise
+
             

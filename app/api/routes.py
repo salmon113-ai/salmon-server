@@ -38,12 +38,10 @@ def message_generator(client: OllamaClient, message: str):
 def chat_stream(request: dict):
     client = OllamaClient(stream=request.get("stream", "False"))
 
-    request_message = request.get("message", "")
-
     logger.info(f"Request message: {request}")
     
     return StreamingResponse(
-        message_generator(client, request_message),
+        message_generator(client, request),
         media_type="application/x-ndjson",
         headers={
             'Cache-Control': 'no-cache',
