@@ -40,30 +40,30 @@ class Pipeline:
         
         if body.get("title", False):
             print("Title Generation")
-            return "Pipeline Rag"
-        
-        headers = {
-            "Content-Type": "application/json"
-        }
-
-        print(f"message: {messages}")
-        print(f"body: {body}")
-        
-        # with 절을 사용하면 openwebui에서 정상적으로 메시지를 못가져감. 메시지 몇개 가져가고 통신이 끊김
-        try:
-            r = requests.post("http://host.docker.internal:8080" + "/stream/chat", json=body, headers=headers, stream=True)
-            r.raise_for_status()
-
-            if body.get("stream", True):
-                return r.iter_lines()                
-            else:
-                # stream 이 아닌 경우 본문을 반환해야 요약이 제대로 표시됨
-                return r.content
+            return self.name
+        else:
+            if "user" in body:
+                print("######################################")
+                print(f'# User: {body["user"]["name"]} ({body["user"]["id"]})')
+                print(f"# Message: {user_message}")
+                print("######################################")
             
-        except requests.exceptions.RequestException as e:
-            print(f"Error making request: {e}")
-            raise
-        except json.JSONDecodeError as e:
-            print(f"Error decoding JSON response: {e}")
-            raise
+            # with 절을 사용하면 openwebui에서 정상적으로 메시지를 못가져감. 메시지 몇개 가져가고 통신이 끊김
+            try:
+                r = requests.post("http://host.docker.internal:8080" + "/stream/chat", json=body, stream=True)
+                r.raise_for_status()
+
+                if body.get("stream", True):
+                    return r.iter_lines()                
+                else:
+                    # stream 이 아닌 경우 본문을 반환해야 요약이 제대로 표시됨
+                    print(f"Not stream response content: {r.json()}")
+                    return r.json()
+                
+            except requests.exceptions.RequestException as e:
+                print(f"Error making request: {e}")
+                raise
+            except json.JSONDecodeError as e:
+                print(f"Error decoding JSON response: {e}")
+                raise
     
