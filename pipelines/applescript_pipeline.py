@@ -84,6 +84,7 @@ class Pipeline:
                 if body["stream"]:
                     return r.iter_lines()
                 else:
+                    print(f"Not stream response content: {r.json()}")
                     return r.json()
             except Exception as e:
                 return f"Error: {e}"
