@@ -1,15 +1,23 @@
-from typing import List, Union, Generator, Iterator
+from typing import List, Union, Generator, Iterator, Optional
 from pydantic import BaseModel
 import json
 import requests
 
 class Pipeline:
     class Valves(BaseModel):
-        pass
+        server_url: Optional[str] = None
+        chat_path: Optional[str] = None
 
     def __init__(self):
         # The name of the pipeline.
         self.name = "Pipeline Rag"
+
+        self.valves = self.Valves(
+            **{
+                "server_url": "http://host.docker.internal:8080",
+                "chat_path": "/stream/chat",
+            }
+        )
         pass
 
     async def on_startup(self):
@@ -50,7 +58,7 @@ class Pipeline:
             
             # with 절을 사용하면 openwebui에서 정상적으로 메시지를 못가져감. 메시지 몇개 가져가고 통신이 끊김
             try:
-                r = requests.post("http://host.docker.internal:8080" + "/stream/chat", json=body, stream=True)
+                r = requests.post(self.valves.server_url + self.valves.chat_path, json=body, stream=True)
                 r.raise_for_status()
 
                 if body.get("stream", True):
