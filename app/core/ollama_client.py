@@ -1,4 +1,5 @@
 import json
+from typing import Generator
 import requests
 from ..utils.logger import get_logger, log_function_call
 
@@ -12,7 +13,7 @@ class OllamaClient:
         self.logger = logger
 
     @log_function_call(logger)
-    def generate_stream(self, prompt, model="llama3.1:latest"):
+    def generate_stream(self, prompt, model="llama3.2:1b"):
         """
         Send a streaming request to Ollama API and yield responses
         
@@ -55,7 +56,7 @@ class OllamaClient:
             raise
 
     @log_function_call(logger)
-    def completion_stream(self, prompt, model="llama3.1:latest"):
+    def completion_stream(self, prompt, model="llama3.1:latest") -> Generator[bytes, None, None]:
         """
         Send a streaming request to Ollama API and yield responses
         

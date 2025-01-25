@@ -9,6 +9,7 @@ from ..core.filters import (
     RAGFilter
 )
 from ..core.ollama_client import OllamaClient
+from ..services.chat_client import ChatClient
 from langfuse.client import Langfuse
 from ..utils.logger import get_logger, log_function_call
 
@@ -30,13 +31,15 @@ def create_filter_chain() -> ProfanityFilter:
 
     return profanity
 
-def message_generator(client: OllamaClient, message: str):
-    for response in client.completion_stream(message):
+def message_generator(client: ChatClient, message: str):
+    for response in client.send_request(message):
         yield response + b'\n'
 
 @router.post("/stream/chat", response_class=StreamingResponse)
 def chat_stream(request: dict):
-    client = OllamaClient(stream=request.get("stream", "False"))
+    client = ChatClient(ollama_client=OllamaClient())
+
+    # client = OllamaClient(stream=request.get("stream", "False"))
 
     logger.info(f"Request message: {request}")
     
