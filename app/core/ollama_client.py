@@ -1,26 +1,27 @@
 import json
 from typing import Generator
 import requests
+
+from app.core.llm_client import LLMClient
 from ..utils.logger import get_logger, log_function_call
 
 logger = get_logger(__name__)
 
-
-class OllamaClient:
-    def __init__(self, base_url: str = "http://localhost:11434", stream: bool = False):
+# OllamaClient class inherits from LLMClient
+class OllamaClient(LLMClient):
+    def __init__(self, base_url: str = "http://localhost:11434", model="llama3.1:latest", stream: bool = False):
         self.base_url = base_url
         self.stream = stream
         self.logger = logger
+        self.model = model
 
     @log_function_call(logger)
-    def completion_stream(self, prompt, model="llama3.1:latest") -> Generator[bytes, None, None]:
+    def send_request(self, prompt) -> Generator[bytes, None, None]:
         """
         Send a streaming request to Ollama API and yield responses
         
         Args:
             prompt (str): The prompt to send to the model
-            model (str): The model to use (default: llama3.1:latest)
-            api_url (str): The Ollama API endpoint URL
             
         Yields:
             dict: Parsed JSON response from the API
@@ -29,7 +30,7 @@ class OllamaClient:
         request_data = prompt
 
         payload = {
-                "model": model,
+                "model": self.model,
                 "messages": request_data.get("messages", []),
                 "stream": request_data.get("stream", True),
             }

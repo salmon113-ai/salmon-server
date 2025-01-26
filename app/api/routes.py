@@ -34,7 +34,7 @@ def create_filter_chain() -> ProfanityFilter:
 
 @router.post("/stream/chat", response_class=StreamingResponse)
 def chat_stream(request: dict):
-    client = ChatClient(ollama_client=OllamaClient())
+    client = ChatClient(llm_client=OllamaClient())
 
     logger.info(f"Request message: {request}")
     
