@@ -31,20 +31,15 @@ def create_filter_chain() -> ProfanityFilter:
 
     return profanity
 
-def message_generator(client: ChatClient, message: str):
-    for response in client.send_request(message):
-        yield response + b'\n'
 
 @router.post("/stream/chat", response_class=StreamingResponse)
 def chat_stream(request: dict):
     client = ChatClient(ollama_client=OllamaClient())
 
-    # client = OllamaClient(stream=request.get("stream", "False"))
-
     logger.info(f"Request message: {request}")
     
     return StreamingResponse(
-        message_generator(client, request),
+        client.send_request(request),
         media_type="application/x-ndjson",
         headers={
             'Cache-Control': 'no-cache',
