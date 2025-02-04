@@ -3,7 +3,7 @@
     "disable_existing_loggers": false,
     "formatters": {
         "json": {
-            "()": "config.logging_config.CustomJsonFormatter",
+            "()": "app.config.logging_config.CustomJsonFormatter",
             "format": "%(timestamp)s %(level)s %(name)s %(message)s"
         }
     },

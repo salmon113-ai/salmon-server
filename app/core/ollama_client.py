@@ -1,3 +1,4 @@
+import asyncio
 import json
 from typing import Generator
 import requests
@@ -43,10 +44,7 @@ class OllamaClient(LLMClientInterface):
                         yield line + b'\n'
 
         except requests.exceptions.RequestException as e:
-            print(f"Error making request: {e}")
-            raise
-        except json.JSONDecodeError as e:
-            print(f"Error decoding JSON response: {e}")
-            raise
-
+            logger.error(f"Ollama 접속 오류: {e}")
+            yield b'Ollama connection error.' + b'\n'
+ 
             

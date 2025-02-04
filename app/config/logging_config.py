@@ -21,19 +21,25 @@ class CustomJsonFormatter(jsonlogger.JsonFormatter):
             log_record.update(record.extra_context)
 
 def setup_logging(
-    default_path='config/logging.json',
+    default_path='app/config/logging.json',
     default_level=logging.INFO,
     env_key='LOG_CFG'
 ):
     """로깅 설정을 초기화합니다."""
+    # 현재 경로를 출력하는 코드
+    print(f"현재 경로: {os.getcwd()}")
+
     path = default_path
     value = os.getenv(env_key, None)
     if value:
         path = value
+        print(f"로깅 설정 파일: {path}")
     if os.path.exists(path):
         with open(path, 'rt') as f:
             config = json.load(f)
+        print(f"로깅 설정: {config}")
         logging.config.dictConfig(config)
     else:
+        print(f"로깅 설정 파일이 없습니다: {path}")
         logging.basicConfig(level=default_level)
         
