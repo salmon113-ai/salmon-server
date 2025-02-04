@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 from typing import Generator
 
 # Abstract class for LLM client
-class LLMClient(ABC):
+class LLMClientInterface(ABC):
 
     # Send a request to the LLM model and yield responses
     @abstractmethod

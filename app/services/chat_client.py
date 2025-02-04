@@ -1,9 +1,9 @@
 from typing import Generator
-from app.core.llm_client import LLMClient
+from app.core.llm_client_interface import LLMClientInterface
 
 
 class ChatClient:
-    def __init__(self, llm_client: LLMClient):
+    def __init__(self, llm_client: LLMClientInterface):
         self.llm_client = llm_client
 
     def send_request(self, request_data) -> Generator[bytes, None, None]:
